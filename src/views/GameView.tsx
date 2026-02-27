@@ -34,7 +34,6 @@ interface Props {
   onNavigate: (view: ViewState) => void;
 }
 
-// 地图坐标数据
 interface MapLocation {
   id: string;
   name: string;
@@ -94,7 +93,6 @@ interface InventoryItem {
   name: string;
   qty: number;
 }
-
 interface RPMessage {
   id: number;
   senderId: number;
@@ -112,7 +110,6 @@ export function GameView({ user, setUser, onNavigate }: Props) {
   const [spiritStatus, setSpiritStatus] = useState<any>({ name: '', intimacy: 0, level: 1, hp: 100 });
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  // 弹窗状态
   const [showLeftPanel, setShowLeftPanel] = useState(true);
   const [activeNPC, setActiveNPC] = useState<any>(null);
   const [showTowerActionPanel, setShowTowerActionPanel] = useState(false);
@@ -129,7 +126,6 @@ export function GameView({ user, setUser, onNavigate }: Props) {
   const [showSettings, setShowSettings] = useState(false);
   const [showAwakening, setShowAwakening] = useState(false);
 
-  // 委托与NPC交互状态
   const [joesPatience, setJoesPatience] = useState(0);
   const [lastJoeTeachDate, setLastJoeTeachDate] = useState<string>(() => localStorage.getItem(`lastJoeTeachDate_${user.id}`) || '');
   const [skills, setSkills] = useState<Skill[]>([]);
@@ -144,14 +140,12 @@ export function GameView({ user, setUser, onNavigate }: Props) {
     isAnonymous: false
   });
 
-  // 商店/拍卖/背包
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [marketGoods, setMarketGoods] = useState<MarketItem[]>([]);
   const [auctionItems, setAuctionItems] = useState<AuctionItem[]>([]);
   const [merchantView, setMerchantView] = useState<'menu' | 'shop' | 'auction' | 'consign'>('menu');
   const [consignForm, setConsignForm] = useState<{ itemId: string; minPrice: number }>({ itemId: '', minPrice: 100 });
 
-  // 面板拖拽位置（持久化）
   const [panelPos, setPanelPos] = useState<{ x: number; y: number }>(() => {
     try {
       return JSON.parse(localStorage.getItem(`panelPos_${user.id}`) || '') || { x: 24, y: 24 };
@@ -173,7 +167,6 @@ export function GameView({ user, setUser, onNavigate }: Props) {
     localStorage.setItem(`panelPos_${user.id}`, JSON.stringify(panelPos));
   }, [panelPos, user.id]);
 
-  // 数据同步
   const syncAllData = async () => {
     try {
       const res = await fetch('/api/admin/users');
@@ -283,7 +276,6 @@ export function GameView({ user, setUser, onNavigate }: Props) {
     await syncAllData();
   };
 
-  // 老乔学习技能
   const handleTalkToJoe = () => {
     const today = new Date().toISOString().slice(0, 10);
     if (lastJoeTeachDate === today) {
@@ -314,7 +306,6 @@ export function GameView({ user, setUser, onNavigate }: Props) {
     syncAllData();
   };
 
-  // 公会委托
   const publishCommission = async () => {
     if (!newCommission.title || !newCommission.reward) return showToast('请填写标题和奖励');
 
@@ -347,10 +338,11 @@ export function GameView({ user, setUser, onNavigate }: Props) {
     if (data.success) {
       showToast('委托已接取，请尽快完成');
       syncAllData();
-    } else showToast(data.message || '接取失败');
+    } else {
+      showToast(data.message || '接取失败');
+    }
   };
 
-  // 核心地图动作逻辑
   const handleLocationAction = async (action: 'enter' | 'explore' | 'stay') => {
     if (!selectedLocation) return;
 
@@ -385,11 +377,11 @@ export function GameView({ user, setUser, onNavigate }: Props) {
       showToast(`已在【${selectedLocation.name}】驻扎`);
       syncAllData();
     }
+
     setSelectedLocation(null);
   };
 
   const activeMap = inTower ? towerLocations : worldLocations;
-
   const playersForContacts = allPlayers.filter((p: any) => p.id !== user.id && p.currentLocation);
 
   return (
@@ -562,9 +554,8 @@ export function GameView({ user, setUser, onNavigate }: Props) {
         )}
       </AnimatePresence>
 
-      {/* NPC交互与委托弹窗 */}
+      {/* NPC弹窗 */}
       <AnimatePresence>
-        {/* 老乔 */}
         {activeNPC?.id === 'npc_craftsman' && (
           <NPCModal npc={activeNPC} onClose={() => setActiveNPC(null)}>
             <div className="grid grid-cols-1 gap-3">
@@ -578,7 +569,6 @@ export function GameView({ user, setUser, onNavigate }: Props) {
           </NPCModal>
         )}
 
-        {/* 公会 */}
         {activeNPC?.id === 'npc_guild_staff' && (
           <NPCModal
             npc={activeNPC}
@@ -654,7 +644,9 @@ export function GameView({ user, setUser, onNavigate }: Props) {
                   />
                   <button
                     onClick={() => setNewCommission({ ...newCommission, isAnonymous: !newCommission.isAnonymous })}
-                    className={`px-4 rounded-xl font-black text-xs ${newCommission.isAnonymous ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'}`}
+                    className={`px-4 rounded-xl font-black text-xs ${
+                      newCommission.isAnonymous ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'
+                    }`}
                   >
                     {newCommission.isAnonymous ? '匿名发布' : '公开身份'}
                   </button>
@@ -667,7 +659,6 @@ export function GameView({ user, setUser, onNavigate }: Props) {
           </NPCModal>
         )}
 
-        {/* 富人区商人 */}
         {activeNPC?.id === 'npc_merchant' && (
           <NPCModal
             npc={activeNPC}
@@ -828,9 +819,7 @@ export function GameView({ user, setUser, onNavigate }: Props) {
             npc={{ icon: <MapPin size={14} />, name: selectedLocation.name, role: '地点操作', desc: selectedLocation.description }}
             onClose={() => setSelectedLocation(null)}
           >
-            <div className="text-[11px] text-slate-500 mb-3">
-              坐标：X {selectedLocation.x} / Y {selectedLocation.y}
-            </div>
+            <div className="text-[11px] text-slate-500 mb-3">坐标：X {selectedLocation.x} / Y {selectedLocation.y}</div>
             <div className="grid grid-cols-1 gap-3">
               {!inTower && selectedLocation.id === 'tower_of_life' && (
                 <button onClick={() => handleLocationAction('enter')} className="py-3 bg-indigo-600 text-white font-black rounded-2xl">
@@ -1045,9 +1034,7 @@ export function GameView({ user, setUser, onNavigate }: Props) {
                 <input
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') sendChatMessage();
-                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && sendChatMessage()}
                   placeholder="输入对戏内容..."
                   className="flex-1 border rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-sky-200"
                 />
@@ -1064,7 +1051,7 @@ export function GameView({ user, setUser, onNavigate }: Props) {
         )}
       </AnimatePresence>
 
-      {/* 塔内职位面板（简版还原） */}
+      {/* 塔内职位面板 */}
       <AnimatePresence>
         {showTowerActionPanel && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-black/40 z-[110] flex items-center justify-center p-4">
@@ -1250,17 +1237,14 @@ export function GameView({ user, setUser, onNavigate }: Props) {
         )}
       </AnimatePresence>
 
-      {/* 分化弹窗（占位还原） */}
+      {/* 分化弹窗 */}
       <AnimatePresence>
         {showAwakening && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-black/60 z-[130] flex items-center justify-center p-4">
             <div className="bg-white rounded-[32px] p-8 max-w-md w-full shadow-2xl text-center">
               <h3 className="font-black text-xl mb-3">评定所</h3>
               <p className="text-slate-600 mb-5">未分化角色的正式分化流程请走管理员审核流程。</p>
-              <button
-                onClick={() => setShowAwakening(false)}
-                className="px-5 py-2 bg-slate-900 text-white rounded-xl font-black"
-              >
+              <button onClick={() => setShowAwakening(false)} className="px-5 py-2 bg-slate-900 text-white rounded-xl font-black">
                 我知道了
               </button>
             </div>
@@ -1355,7 +1339,6 @@ export function GameView({ user, setUser, onNavigate }: Props) {
   );
 }
 
-// 辅助组件
 function NPCModal({ npc, onClose, children }: any) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-black/40 z-[110] flex items-center justify-center p-4">
